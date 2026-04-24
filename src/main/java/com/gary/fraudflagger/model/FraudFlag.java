@@ -27,6 +27,9 @@ public class FraudFlag {
     @Column(nullable = false)
     private LocalDateTime flaggedAt;
 
+    @Column
+    private String triggeredRules; //e.g. "LARGE_TRANSACTION, UNUSUAL_HOUR"
+
     //Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -45,4 +48,7 @@ public class FraudFlag {
 
     public LocalDateTime getFlaggedAt() { return flaggedAt; }
     public void setFlaggedAt(LocalDateTime flaggedAt) { this.flaggedAt = flaggedAt; }
+
+    public String getTriggeredRules() { return triggeredRules; }
+    public void setTriggeredRules(String triggeredRules) { this.triggeredRules = triggeredRules; }
 }
