@@ -24,4 +24,9 @@ public class DashboardController {
     public String home(){
         return "redirect:/dashboard";
     }
+
+    @GetMapping("/login")
+    public String loginPage(){
+        return "login";
+    }
 }
