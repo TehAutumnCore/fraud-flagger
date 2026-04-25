@@ -79,6 +79,7 @@ public class FraudDetectionService {
             flag.setTriggeredRules(String.join(", ", triggeredRules));
             flag.setStatus("PENDING");
             flag.setFlaggedAt(LocalDateTime.now());
+            flag.setReason("Automated fraud detection");
             fraudFlagRepository.save(flag);
         }
     }

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Fraud Flagger — Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2rem; }
+        table { border-collapse: collapse; width: 100%; }
+        th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
+        th { background-color: #f0f0f0; }
+        .high { color: red; font-weight: bold; }
+        .medium { color: orange; }
+        .low { color: green; }
+        nav { margin-bottom: 1.5rem; }
+        nav a { margin-right: 1rem; }
+    </style>
+</head>
+<body>
+
+<h1>Fraud Flagger — Dashboard</h1>
+
+<nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/transactions/submit">Submit Transaction</a>
+</nav>
+
+<h2>Flagged Transactions</h2>
+
+<div th:if="${#lists.isEmpty(flags)}"> <!--conditional rendering(show empty message vs table-->
+    <p>No fraud flags yet. Submit a transaction to get started.</p>
+</div>
+
+<table th:unless="${#lists.isEmpty(flags)}">  <!--conditional rendering(show empty message vs table-->
+    <thead>
+    <tr>
+        <th>Flag ID</th>
+        <th>Transaction ID</th>
+        <th>Account</th>
+        <th>Amount</th>
+        <th>Risk Score</th>
+        <th>Rules Triggered</th>
+        <th>Status</th>
+        <th>Flagged At</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="flag : ${flags}"> <!--loops over every flag in the list (like a for-each loop-->
+        <td th:text="${flag.id}"></td>
+        <td th:text="${flag.transaction.id}"></td>
+        <td th:text="${flag.transaction.account.accountNumber}"></td>
+        <td th:text="${'$' + flag.transaction.amount}"></td>
+        <td>
+            <span th:class="${flag.riskScore ge 70 ? 'high' : (flag.riskScore ge 40 ? 'medium' : 'low')}"
+                  th:text="${flag.riskScore}">
+            </span>
+        </td>
+        <td th:text="${flag.triggeredRules}"></td>
+        <td th:text="${flag.status}"></td>
+        <td th:text="${flag.flaggedAt}"></td>
+    </tr>
+    </tbody>
+</table>
+
+</body>
+</html>
