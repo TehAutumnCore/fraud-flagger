@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
+<head>
+    <title>Audit Log — Fraud Flagger</title>
+</head>
+<body>
+<h1>Audit Log</h1>
+<a href="/dashboard">← Back to Dashboard</a>
+
+<table border="1" cellpadding="8">
+    <thead>
+    <tr>
+        <th>Timestamp</th>
+        <th>Performed By</th>
+        <th>Action</th>
+        <th>Flag ID</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="entry : ${logs}">
+        <td th:text="${entry.timestamp}"></td>
+        <td th:text="${entry.performedBy}"></td>
+        <td th:text="${entry.action}"></td>
+        <td th:text="${entry.flagId}"></td>
+    </tr>
+    <tr th:if="${#lists.isEmpty(logs)}">
+        <td colspan="4">No audit entries yet.</td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
     <title>Fraud Flagger — Dashboard</title>
     <style>
@@ -19,11 +20,8 @@
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <h1>Fraud Flagger Dashboard</h1>
     <div>
-        <!-- Shows who is logged in -->
         <span th:text="'Logged in as: ' + ${#authentication.name}"
               style="margin-right: 16px; color: #555;"></span>
-
-        <!-- Logout is a POST request (CSRF protection requires it) -->
         <form th:action="@{/logout}" method="post" style="display: inline;">
             <button type="submit"
                     style="padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">
@@ -33,20 +31,22 @@
     </div>
 </div>
 
-<h1>Fraud Flagger — Dashboard</h1>
-
 <nav>
     <a href="/dashboard">Dashboard</a>
     <a href="/transactions/submit">Submit Transaction</a>
+    <!-- Audit log link — only visible to MANAGER and ADMIN -->
+    <span sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+        <a href="/audit-log">View Audit Log</a>
+    </span>
 </nav>
 
 <h2>Flagged Transactions</h2>
 
-<div th:if="${#lists.isEmpty(flags)}"> <!--conditional rendering(show empty message vs table-->
+<div th:if="${#lists.isEmpty(flags)}">
     <p>No fraud flags yet. Submit a transaction to get started.</p>
 </div>
 
-<table th:unless="${#lists.isEmpty(flags)}">  <!--conditional rendering(show empty message vs table-->
+<table th:unless="${#lists.isEmpty(flags)}">
     <thead>
     <tr>
         <th>Flag ID</th>
@@ -57,22 +57,43 @@
         <th>Rules Triggered</th>
         <th>Status</th>
         <th>Flagged At</th>
+        <th sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">Actions</th>
     </tr>
     </thead>
     <tbody>
-    <tr th:each="flag : ${flags}"> <!--loops over every flag in the list (like a for-each loop-->
+    <tr th:each="flag : ${flags}">
         <td th:text="${flag.id}"></td>
         <td th:text="${flag.transaction.id}"></td>
         <td th:text="${flag.transaction.account.accountNumber}"></td>
         <td th:text="${'$' + flag.transaction.amount}"></td>
         <td>
-            <span th:class="${flag.riskScore ge 70 ? 'high' : (flag.riskScore ge 40 ? 'medium' : 'low')}"
-                  th:text="${flag.riskScore}">
-            </span>
+                <span th:class="${flag.riskScore ge 70 ? 'high' : (flag.riskScore ge 40 ? 'medium' : 'low')}"
+                      th:text="${flag.riskScore}">
+                </span>
         </td>
         <td th:text="${flag.triggeredRules}"></td>
-        <td th:text="${flag.status}"></td>
+        <td>
+                <span th:text="${flag.status}"
+                      th:classappend="${flag.status == 'PENDING'} ? 'badge-pending' :
+                                      (${flag.status == 'APPROVED'} ? 'badge-approved' : 'badge-dismissed')">
+                </span>
+        </td>
         <td th:text="${flag.flaggedAt}"></td>
+        <td sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
+            <form th:if="${flag.status == 'PENDING'}"
+                  th:action="@{/flags/{id}/approve(id=${flag.id})}"
+                  method="post" style="display:inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit">✅ Approve</button>
+            </form>
+            <form th:if="${flag.status == 'PENDING'}"
+                  th:action="@{/flags/{id}/dismiss(id=${flag.id})}"
+                  method="post" style="display:inline;">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <button type="submit">❌ Dismiss</button>
+            </form>
+            <span th:if="${flag.status != 'PENDING'}">—</span>
+        </td>
     </tr>
     </tbody>
 </table>

@@ -27,7 +27,7 @@ public class UserDetailsServiceImpl implements UserDetailsService { //fulfilling
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole())) // converts your role string ("ANALYST" into "ROLE_ANALYST", which is the format Spring Security Expects
+                List.of(new SimpleGrantedAuthority(user.getRole())) // converts your role string ("ANALYST" into "ROLE_ANALYST", which is the format Spring Security Expects
         );
     }
 }

@@ -20,7 +20,9 @@
     <a href="/transactions/submit">Submit Transaction</a>
 </nav>
 
-<form action="/transactions/submit" method="post">
+<form th:action="@{/transactions/submit}" method="post">
+
+    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
     <label for="accountId">Account</label>
     <select id="accountId" name="accountId">
