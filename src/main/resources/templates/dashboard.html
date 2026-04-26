@@ -2,101 +2,115 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
-    <title>Fraud Flagger — Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 2rem; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: 8px 12px; text-align: left; }
-        th { background-color: #f0f0f0; }
-        .high { color: red; font-weight: bold; }
-        .medium { color: orange; }
-        .low { color: green; }
-        nav { margin-bottom: 1.5rem; }
-        nav a { margin-right: 1rem; }
-    </style>
+    <meta charset="UTF-8"/>
+    <title>Dashboard — Fraud Flagger</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <h1>Fraud Flagger Dashboard</h1>
-    <div>
-        <span th:text="'Logged in as: ' + ${#authentication.name}"
-              style="margin-right: 16px; color: #555;"></span>
-        <form th:action="@{/logout}" method="post" style="display: inline;">
-            <button type="submit"
-                    style="padding: 8px 16px; background: #e74c3c; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                Logout
-            </button>
+<nav class="navbar">
+    <a class="navbar-brand" th:href="@{/dashboard}">
+        <div class="brand-icon">
+            <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 0L0 3v5c0 4.418 2.985 7.5 7 8 4.015-.5 7-3.582 7-8V3L7 0z" fill="white"/>
+            </svg>
+        </div>
+        <span class="brand-name">Fraud Flagger <span class="brand-lite">Lite</span></span>
+    </a>
+    <ul class="navbar-nav">
+        <li><a th:href="@{/dashboard}" class="active">Dashboard</a></li>
+        <li><a th:href="@{/transactions/submit}">Submit Transaction</a></li>
+        <li sec:authorize="hasAnyRole('MANAGER','ADMIN')">
+            <a th:href="@{/audit-log}">Audit Log</a>
+        </li>
+    </ul>
+    <div class="navbar-right">
+        <span class="navbar-user">
+            Signed in as <span sec:authentication="name">user</span>
+        </span>
+        <form th:action="@{/logout}" method="post" style="margin:0;">
+            <button type="submit" class="btn-logout">Sign Out</button>
         </form>
     </div>
-</div>
-
-<nav>
-    <a href="/dashboard">Dashboard</a>
-    <a href="/transactions/submit">Submit Transaction</a>
-    <!-- Audit log link — only visible to MANAGER and ADMIN -->
-    <span sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
-        <a href="/audit-log">View Audit Log</a>
-    </span>
 </nav>
 
-<h2>Flagged Transactions</h2>
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <div class="page-title">Flagged Transactions</div>
+            <div class="page-subtitle">Real-time fraud detection alerts</div>
+        </div>
+    </div>
 
-<div th:if="${#lists.isEmpty(flags)}">
-    <p>No fraud flags yet. Submit a transaction to get started.</p>
+    <div class="card">
+        <div class="card-header">
+            <span class="card-header-title">Active Flags</span>
+            <span class="card-header-count" th:text="${flags.size()} + ' flags'">0 flags</span>
+        </div>
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>Flag ID</th>
+                <th>Txn ID</th>
+                <th>Account</th>
+                <th>Amount</th>
+                <th>Risk Score</th>
+                <th>Rules Triggered</th>
+                <th>Status</th>
+                <th>Flagged At</th>
+                <th sec:authorize="hasAnyRole('MANAGER','ADMIN')">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${flags.isEmpty()}">
+                <td colspan="9" class="empty-state">No flagged transactions.</td>
+            </tr>
+            <tr th:each="flag : ${flags}">
+                <td class="mono" th:text="${flag.id}"></td>
+                <td class="mono" th:text="${flag.transaction.id}"></td>
+                <td class="mono" th:text="${flag.transaction.account.accountNumber}"></td>
+                <td class="amount"
+                    th:text="${'$' + #numbers.formatDecimal(flag.transaction.amount, 1, 'COMMA', 2, 'POINT')}"></td>
+
+                <td>
+                        <span th:if="${flag.riskScore < 30}"
+                              class="risk-badge risk-low"
+                              th:text="${flag.riskScore}"></span>
+                    <span th:if="${flag.riskScore >= 30 and flag.riskScore < 70}"
+                          class="risk-badge risk-medium"
+                          th:text="${flag.riskScore}"></span>
+                    <span th:if="${flag.riskScore >= 70}"
+                          class="risk-badge risk-high"
+                          th:text="${flag.riskScore}"></span>
+                </td>
+
+                <td>
+                    <span class="rule-tag" th:text="${flag.triggeredRules}"></span>
+                </td>
+
+                <td>
+                        <span th:class="${'status-badge status-' + flag.status.toLowerCase()}"
+                              th:text="${flag.status}"></span>
+                </td>
+
+                <td class="mono"
+                    th:text="${#temporals.format(flag.flaggedAt, 'MMM dd, yyyy hh:mm a')}"></td>
+
+                <td sec:authorize="hasAnyRole('MANAGER','ADMIN')">
+                    <form th:action="@{/flags/{id}/approve(id=${flag.id})}"
+                          method="post" style="display:inline;">
+                        <button type="submit" class="btn-approve">Approve</button>
+                    </form>
+                    <form th:action="@{/flags/{id}/dismiss(id=${flag.id})}"
+                          method="post" style="display:inline;">
+                        <button type="submit" class="btn-dismiss">Dismiss</button>
+                    </form>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
-
-<table th:unless="${#lists.isEmpty(flags)}">
-    <thead>
-    <tr>
-        <th>Flag ID</th>
-        <th>Transaction ID</th>
-        <th>Account</th>
-        <th>Amount</th>
-        <th>Risk Score</th>
-        <th>Rules Triggered</th>
-        <th>Status</th>
-        <th>Flagged At</th>
-        <th sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">Actions</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="flag : ${flags}">
-        <td th:text="${flag.id}"></td>
-        <td th:text="${flag.transaction.id}"></td>
-        <td th:text="${flag.transaction.account.accountNumber}"></td>
-        <td th:text="${'$' + flag.transaction.amount}"></td>
-        <td>
-                <span th:class="${flag.riskScore ge 70 ? 'high' : (flag.riskScore ge 40 ? 'medium' : 'low')}"
-                      th:text="${flag.riskScore}">
-                </span>
-        </td>
-        <td th:text="${flag.triggeredRules}"></td>
-        <td>
-                <span th:text="${flag.status}"
-                      th:classappend="${flag.status == 'PENDING'} ? 'badge-pending' :
-                                      (${flag.status == 'APPROVED'} ? 'badge-approved' : 'badge-dismissed')">
-                </span>
-        </td>
-        <td th:text="${flag.flaggedAt}"></td>
-        <td sec:authorize="hasAnyRole('MANAGER', 'ADMIN')">
-            <form th:if="${flag.status == 'PENDING'}"
-                  th:action="@{/flags/{id}/approve(id=${flag.id})}"
-                  method="post" style="display:inline;">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <button type="submit">✅ Approve</button>
-            </form>
-            <form th:if="${flag.status == 'PENDING'}"
-                  th:action="@{/flags/{id}/dismiss(id=${flag.id})}"
-                  method="post" style="display:inline;">
-                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
-                <button type="submit">❌ Dismiss</button>
-            </form>
-            <span th:if="${flag.status != 'PENDING'}">—</span>
-        </td>
-    </tr>
-    </tbody>
-</table>
 
 </body>
 </html>

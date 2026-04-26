@@ -2,32 +2,78 @@
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/springsecurity6">
 <head>
+    <meta charset="UTF-8"/>
     <title>Audit Log — Fraud Flagger</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}"/>
 </head>
 <body>
-<h1>Audit Log</h1>
-<a href="/dashboard">← Back to Dashboard</a>
 
-<table border="1" cellpadding="8">
-    <thead>
-    <tr>
-        <th>Timestamp</th>
-        <th>Performed By</th>
-        <th>Action</th>
-        <th>Flag ID</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="entry : ${logs}">
-        <td th:text="${entry.timestamp}"></td>
-        <td th:text="${entry.performedBy}"></td>
-        <td th:text="${entry.action}"></td>
-        <td th:text="${entry.flagId}"></td>
-    </tr>
-    <tr th:if="${#lists.isEmpty(logs)}">
-        <td colspan="4">No audit entries yet.</td>
-    </tr>
-    </tbody>
-</table>
+<nav class="navbar">
+    <a class="navbar-brand" th:href="@{/dashboard}">
+        <div class="brand-icon">
+            <svg width="14" height="16" viewBox="0 0 14 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M7 0L0 3v5c0 4.418 2.985 7.5 7 8 4.015-.5 7-3.582 7-8V3L7 0z" fill="white"/>
+            </svg>
+        </div>
+        <span class="brand-name">Fraud Flagger <span class="brand-lite">Lite</span></span>
+    </a>
+    <ul class="navbar-nav">
+        <li><a th:href="@{/dashboard}">Dashboard</a></li>
+        <li><a th:href="@{/transactions/submit}">Submit Transaction</a></li>
+        <li sec:authorize="hasAnyRole('MANAGER','ADMIN')">
+            <a th:href="@{/audit-log}" class="active">Audit Log</a>
+        </li>
+    </ul>
+    <div class="navbar-right">
+        <span class="navbar-user">
+            Signed in as <span sec:authentication="name">user</span>
+        </span>
+        <form th:action="@{/logout}" method="post" style="margin:0;">
+            <button type="submit" class="btn-logout">Sign Out</button>
+        </form>
+    </div>
+</nav>
+
+<div class="page-wrapper">
+    <div class="page-header">
+        <div>
+            <div class="page-title">Audit Log</div>
+            <div class="page-subtitle">All flag review decisions, newest first</div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <span class="card-header-title">Review History</span>
+            <span class="card-header-count" th:text="${logs.size()} + ' entries'">0 entries</span>
+        </div>
+        <table class="data-table">
+            <thead>
+            <tr>
+                <th>Timestamp</th>
+                <th>Performed By</th>
+                <th>Action</th>
+                <th>Flag ID</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:if="${logs.isEmpty()}">
+                <td colspan="4" class="empty-state">No audit entries yet.</td>
+            </tr>
+            <tr th:each="log : ${logs}">
+                <td class="mono"
+                    th:text="${#temporals.format(log.timestamp, 'MMM dd, yyyy hh:mm a')}"></td>
+                <td th:text="${log.performedBy}"></td>
+                <td>
+                        <span th:class="${'status-badge status-' + log.action.toLowerCase()}"
+                              th:text="${log.action}"></span>
+                </td>
+                <td class="mono" th:text="${log.flagId}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
 </body>
 </html>

@@ -22,7 +22,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/login", "/h2-console/**").permitAll() //public pages
+                        .requestMatchers("/login", "/css/**", "/h2-console/**").permitAll()
                         .requestMatchers("/admin/**").hasRole("ADMIN") //admin only
                         .requestMatchers("/flags/**").hasAnyRole("MANAGER", "ADMIN") //day 6
                         .anyRequest().authenticated() //everything else : must be logged in

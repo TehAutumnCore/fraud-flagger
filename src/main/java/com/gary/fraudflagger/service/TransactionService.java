@@ -4,6 +4,8 @@ import com.gary.fraudflagger.model.Transaction;
 import com.gary.fraudflagger.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class TransactionService {
 
@@ -25,5 +27,9 @@ public class TransactionService {
 
         //Step 3: Return the saved Transaction
         return saved;
+    }
+
+    public List<Transaction> getAllTransactions() {
+        return transactionRepository.findAll();
     }
 }
