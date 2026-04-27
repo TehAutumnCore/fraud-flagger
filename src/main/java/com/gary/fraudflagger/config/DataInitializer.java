@@ -19,7 +19,7 @@ public class DataInitializer {
 
     @Bean
     public CommandLineRunner seedUsers(UserRepository userRepository,
-                                       BCryptPasswordEncoder passwordEncoder) {
+                                       BCryptPasswordEncoder passwordEncoder, AccountRepository accountRepository) {
         return args -> {
             if (userRepository.count() == 0) {
                 User analyst = new User();
@@ -49,6 +49,27 @@ public class DataInitializer {
     public CommandLineRunner seedTransactions(AccountRepository accountRepository,
                                               TransactionService transactionService) {
         return args -> {
+
+            // Seed accounts if they don't exist yet
+            if (accountRepository.findByAccountNumber("ACC-001") == null) {
+                Account alice = new Account();
+                alice.setAccountNumber("ACC-001");
+                alice.setOwnerName("Alice");
+                accountRepository.save(alice);
+            }
+            if (accountRepository.findByAccountNumber("ACC-002") == null) {
+                Account bob = new Account();
+                bob.setAccountNumber("ACC-002");
+                bob.setOwnerName("Bob");
+                accountRepository.save(bob);
+            }
+            if (accountRepository.findByAccountNumber("ACC-003") == null) {
+                Account carol = new Account();
+                carol.setAccountNumber("ACC-003");
+                carol.setOwnerName("Carol");
+                accountRepository.save(carol);
+            }
+
             // Skip if transactions already exist
             if (transactionService.getAllTransactions().size() > 0) return;
 
